@@ -1,12 +1,42 @@
-import { groupBy, sortBy, difference, pullAll, keyBy } from 'lodash';
+import { groupBy, keyBy } from 'lodash';
 import fs from 'fs';
+
 // https://dawa.aws.dk/adresser?sognekode=8128&struktur=mini
 const brabrand: Address[] = JSON.parse(fs.readFileSync('./brabrand.json').toString('utf-8'));
 // https://dawa.aws.dk/adresser?sognekode=8129&struktur=mini
 const aarslev: Address[] = JSON.parse(fs.readFileSync('./aarslev.json').toString('utf-8'));
 
-// https://dawa.aws.dk/adresser?sognekode=8129&struktur=mini
+// https://dawa.aws.dk/adresser?sognekode=9097&struktur=mini
+const gellerup: Address[] = JSON.parse(fs.readFileSync('./gellerup.json').toString('utf-8'));
+
+// https://dawa.aws.dk/navngivneveje?postnr=8220&format=geojson
 const veje: Vej[] = JSON.parse(fs.readFileSync('./veje-i-brabrand.json').toString('utf-8'));
+
+const blackList = ['Balsgårdsvej', 'Brabrand Haveforening', 'Edwin Rahrs Vej', 'Logistikparken', 'Rosbjergvej', 'Rætebølvej', 'Søskovvej'];
+
+const gellerupWhitelist = [
+  'Annettevej',
+  'Birgittevej',
+  'Bjerringsvej',
+  'Edithsvej',
+  'Ellensvej',
+  'Grethesvej',
+  'Hannesvej',
+  'Hejredalsvej',
+  'Kirstensvej',
+  'Koppelsvej',
+  'Louisevej',
+  'Røgelvej',
+  'Rørsangervej',
+  'Sivsangervej',
+  'Søren Skjødts Vej',
+];
+
+const gellerupAddresses = gellerup.filter((a) => gellerupWhitelist.includes(a.vejnavn));
+const allAddresses: Address[] = gellerupAddresses.concat(
+  brabrand.concat(aarslev as any).filter((a) => !blackList.includes(a.vejnavn)) as any
+);
+
 console.log();
 const vejeByNavn = keyBy(veje, (v) => v.properties.navn);
 
@@ -101,7 +131,6 @@ function simpleDistance(p1: Position, p2: Position): number {
   return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
 }
 
-const allAddresses: Address[] = brabrand.concat(aarslev as any) as any;
 const byRoads = groupBy(allAddresses, (a) => a.vejnavn);
 
 const roads = Object.entries(byRoads)
@@ -149,9 +178,7 @@ const routes = [];
 while (remainingRoads.length > 0) {
   const res = getRoute(remainingRoads);
   // routes.push(res.route.map((road) => ({ ...road, addresses: [road.addresses[0], road.addresses[road.addresses.length - 1]] })));
-  routes.push(
-    res.route.map((road) => ({ ...road, addresses: [...road.addresses.sort(() => (Math.random() > 0.5 ? 1 : -1))].slice(0, 100) }))
-  );
+  routes.push(res.route);
   remainingRoads = res.remainingRoads;
   console.log(`ROUTE ${i}: ${res.route.map((r) => r.toString())}`);
   i++;

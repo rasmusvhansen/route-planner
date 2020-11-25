@@ -6,6 +6,9 @@
     <title>KalenderRuter</title>
 
     <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
       img {
         margin: 20px;
       }
@@ -17,12 +20,25 @@
       p {
         font-size: 14pt;
       }
+
+      p.instructions {
+        line-height: 24pt;
+      }
     </style>
   </head>
   <body>
     <script type="module" src="secret.mjs"></script>
     <script type="module">
       import { hereApiKey } from './secret.mjs';
+      const h = (element, text, append=true, className = '') => {
+        const el = document.createElement(element);
+        el.className = className;
+        el.innerText = text;
+        if (append) {
+          document.body.appendChild(el);
+        }
+        return el;
+      }
 
       fetch('routes.json')
         .then((res) => res.json())
@@ -38,19 +54,22 @@
                 img.src = objectURL;
                 els.push(img);
 
-                const p = document.createElement('p');
-                p.innerText = `${road.vejnavn} - ${road.count} postkasser. Husnummer ${road.endPoints[0].husnr} - ${road.endPoints[1].husnr}`;
-                els.push(p);
+                const text = `${road.vejnavn} - ${road.count} postkasser. Heraf ${road.addresses.filter(a => a.etage).length} i etage-ejendomme 
+                Husnummer ${road.endPoints[0].husnr} - ${road.endPoints[1].husnr}.`;
+                els.push(h('p', text, false));               
                 return els;
               })
             );
           });
           let ruteNr = 1;
           Promise.all(routePromises).then((elements) => {
+            const numberOfRoads = elements.map(route => route.length).reduce((sum, l) => sum + l, 0);
+            const numberOfMailboxes = routes.flatMap(route => route.map(road => road.addresses.length)).reduce((sum, l) => sum + l, 0);
+            h('h1', 'Kalender-ruter');
+            h('p', `Der er ${numberOfRoads} veje fordelt på ${elements.length} ruter med i alt ${numberOfMailboxes} postkasser.`);
+
             elements.forEach((route, i) => {
-              const h1 = document.createElement('h1');
-              h1.innerText = `Rute ${i + 1}`;
-              document.body.appendChild(h1);
+              h('h1', `Rute ${i + 1}`);            
               route.forEach((roadElements, j) => {
                 // const h1 = document.createElement('h1');
                 // h1.innerText = `Rute ${ruteNr}`;
@@ -60,6 +79,14 @@
                   document.body.appendChild(el);
                 });
               });
+
+              const instructions = `
+                I kan begynde uddelingen med det samme eller inden for en uge (senest søndag d. 6/12)
+                Denne rute er uddelt af:____________________________________________________
+                Når ruten er uddelt, meldes tilbage til Steffen på: 22 81 29 79 med angivelse af rutenummer og overskydende kalendre.
+                Antal overskydende kalendre:
+                Evt. kommentarer: `;
+              h('p', instructions, true, 'instructions');
             });
           });
         });
