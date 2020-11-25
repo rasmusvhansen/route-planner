@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KalenderRuter</title>
+
+    <style>
+      img {
+        margin: 20px;
+      }
+
+      h1:not(:first-of-type) {
+        page-break-before: always;
+      }
+
+      p {
+        font-size: 14pt;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module" src="secret.mjs"></script>
+    <script type="module">
+      import { hereApiKey } from './secret.mjs';
+
+      fetch('routes.json')
+        .then((res) => res.json())
+        .then((routes) => {
+          const routePromises = routes.map((route, i) => {
+            const mapsForSingleRoute = Promise.all(route.map((road) => getImage(road)));
+            return mapsForSingleRoute.then((blobs) =>
+              blobs.map(({ blob, road }, roadIndex) => {
+                const els = [];
+
+                const objectURL = URL.createObjectURL(blob);
+                const img = document.createElement('img');
+                img.src = objectURL;
+                els.push(img);
+
+                const p = document.createElement('p');
+                p.innerText = `${road.vejnavn} - ${road.count} postkasser. Husnummer ${road.endPoints[0].husnr} - ${road.endPoints[1].husnr}`;
+                els.push(p);
+                return els;
+              })
+            );
+          });
+          let ruteNr = 1;
+          Promise.all(routePromises).then((elements) => {
+            elements.forEach((route, i) => {
+              const h1 = document.createElement('h1');
+              h1.innerText = `Rute ${i + 1}`;
+              document.body.appendChild(h1);
+              route.forEach((roadElements, j) => {
+                // const h1 = document.createElement('h1');
+                // h1.innerText = `Rute ${ruteNr}`;
+                // ruteNr++;
+                // document.body.appendChild(h1);
+                roadElements.forEach((el) => {
+                  document.body.appendChild(el);
+                });
+              });
+            });
+          });
+        });
+
+      function getPostBody(road) {
+        return road.geometry.reduce((body, line, i) => {
+          body['r' + i] = line.map((points) => points.reverse().join(',')).join(',');
+          return body;
+        }, {});
+      }
+
+      async function getImage(road) {
+        // const body = getPostBody(road);
+        let body = road.geometry.map((line, i) => `r${i}=${line.map((points) => points.reverse().join('%2C')).join('%2C')}`).join('&');
+        body += '&apiKey=' + hereApiKey;
+        body += '&w=1000';
+        const blob = await postData('https://image.maps.ls.hereapi.com/mia/1.6/route?apiKey=' + hereApiKey, body);
+        return { blob, road };
+      }
+
+      async function postData(url = '', data = {}) {
+        // Default options are marked with *
+        const response = await fetch(url, {
+          method: 'POST', // *GET, POST, PUT, DELETE, etc.
+          mode: 'cors', // no-cors, *cors, same-origin
+          cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+          credentials: 'same-origin', // include, *same-origin, omit
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          redirect: 'follow', // manual, *follow, error
+          referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+          body: data,
+        });
+        const blob = await response.blob();
+        return blob;
+      }
+    </script>
+  </body>
+</html>

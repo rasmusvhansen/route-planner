@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KalenderRuter</title>
+  
+   <style>
+       img {
+           margin: 20px;
+       }
+   </style>
+</head>
+<body>
+    
+    
+    
+   <script>
+    // const mapImg = (bbox, houses) => `https://static-maps.yandex.ru/1.x/?lang=en-US&l=map&size=600,400&pl=c:ec473fFF,f:00FF00A0,w:${bbox}`;
+    const mapImg = (bbox, houses) => `https://static-maps.yandex.ru/1.x/?lang=en-US&bbox=${bbox}&l=map&size=650,450&pt=` + houses.map(h => h + ',pmwts').join('~');
+    const pointToString = point => `${point.x},${point.y}`;
+    fetch('routes.json').then(res => res.json()).then(routes => {
+        routes.forEach(route => {
+            route.forEach(road => {
+                const img = document.createElement('img');
+                img.src=mapImg(`${pointToString(road.bbox[0])}~${pointToString(road.bbox[1])}`, road.addresses.map(pointToString));
+                document.body.appendChild(img);
+
+                p = document.createElement('p');
+                p.innerText = road.vejnavn;
+                document.body.appendChild(p);                
+            })
+        })
+    })
+   </script>
+</body>
+</html>
