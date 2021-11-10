@@ -10,7 +10,7 @@ const aarslev: Address[] = JSON.parse(fs.readFileSync('./aarslev.json').toString
 const gellerup: Address[] = JSON.parse(fs.readFileSync('./gellerup.json').toString('utf-8'));
 
 // https://dawa.aws.dk/navngivneveje?postnr=8220&format=geojson
-const veje: Vej[] = JSON.parse(fs.readFileSync('./veje-i-brabrand.json').toString('utf-8'));
+const veje: Vej[] = JSON.parse(fs.readFileSync('./veje-i-brabrand.json').toString('utf-8')).features;
 
 const blackList = ['Balsgårdsvej', 'Brabrand Haveforening', 'Edwin Rahrs Vej', 'Logistikparken', 'Rosbjergvej', 'Rætebølvej', 'Søskovvej'];
 

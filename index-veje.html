@@ -15,14 +15,16 @@
 
       h1:not(:first-of-type) {
         page-break-before: always;
+        margin-bottom: 12px;
       }
 
       p {
-        font-size: 14pt;
+        font-size: 12pt;
+        margin: 4px 0;
       }
 
       p.instructions {
-        line-height: 24pt;
+        line-height: 18pt;
       }
     </style>
   </head>
@@ -30,7 +32,7 @@
     <script type="module" src="secret.mjs"></script>
     <script type="module">
       import { hereApiKey } from './secret.mjs';
-      const h = (element, text, append=true, className = '') => {
+      const h = (element, text, append = true, className = '') => {
         const el = document.createElement(element);
         el.className = className;
         el.innerText = text;
@@ -38,7 +40,7 @@
           document.body.appendChild(el);
         }
         return el;
-      }
+      };
 
       fetch('routes.json')
         .then((res) => res.json())
@@ -54,22 +56,24 @@
                 img.src = objectURL;
                 els.push(img);
 
-                const text = `${road.vejnavn} - ${road.count} postkasser. Heraf ${road.addresses.filter(a => a.etage).length} i etage-ejendomme 
+                const text = `${road.vejnavn} - ${road.count} postkasser. Heraf ${
+                  road.addresses.filter((a) => a.etage).length
+                } i etage-ejendomme 
                 Husnummer ${road.endPoints[0].husnr} - ${road.endPoints[1].husnr}.`;
-                els.push(h('p', text, false));               
+                els.push(h('p', text, false));
                 return els;
               })
             );
           });
           let ruteNr = 1;
           Promise.all(routePromises).then((elements) => {
-            const numberOfRoads = elements.map(route => route.length).reduce((sum, l) => sum + l, 0);
-            const numberOfMailboxes = routes.flatMap(route => route.map(road => road.addresses.length)).reduce((sum, l) => sum + l, 0);
+            const numberOfRoads = elements.map((route) => route.length).reduce((sum, l) => sum + l, 0);
+            const numberOfMailboxes = routes.flatMap((route) => route.map((road) => road.addresses.length)).reduce((sum, l) => sum + l, 0);
             h('h1', 'Kalender-ruter');
             h('p', `Der er ${numberOfRoads} veje fordelt på ${elements.length} ruter med i alt ${numberOfMailboxes} postkasser.`);
 
             elements.forEach((route, i) => {
-              h('h1', `Rute ${i + 1}`);            
+              h('h1', `Rute ${i + 1}`);
               route.forEach((roadElements, j) => {
                 // const h1 = document.createElement('h1');
                 // h1.innerText = `Rute ${ruteNr}`;
@@ -80,10 +84,9 @@
                 });
               });
 
-              const instructions = `
-                I kan begynde uddelingen med det samme eller inden for en uge (senest søndag d. 6/12)
+              const instructions = `I kan begynde uddelingen med det samme eller inden for en uge (senest søndag d. 28/11)
                 Denne rute er uddelt af:____________________________________________________
-                Når ruten er uddelt, meldes tilbage til Steffen på: 22 81 29 79 med angivelse af rutenummer og overskydende kalendre.
+                Når ruten er uddelt, meldes tilbage til Jes på 23 35 54 80 med angivelse af rutenummer og overskydende kalendre.
                 Antal overskydende kalendre:
                 Evt. kommentarer: `;
               h('p', instructions, true, 'instructions');
